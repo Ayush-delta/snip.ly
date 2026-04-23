@@ -1,6 +1,6 @@
 # 🔗 URL Shortener + Analytics
 
-> **Full-stack, production-ready URL shortener with real-time click analytics, built as a 1-day DevOps portfolio project.**
+> **Full-stack, production-ready URL shortener with real-time click analytics.**
 
 [![CI/CD](https://github.com/yourusername/url-shortener/actions/workflows/deploy.yml/badge.svg)](https://github.com/yourusername/url-shortener/actions)
 ![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker&logoColor=white)
@@ -206,6 +206,4 @@ Redirects `301` to original URL. Logs click asynchronously.
 | DevOps | Docker, docker-compose, Nginx |
 | CI/CD | GitHub Actions, Docker Hub, SSH deploy |
 
----
 
-*Built in 1 day as a full-stack DevOps portfolio project.*
