@@ -3,7 +3,7 @@
   <p><b>A modern, high-performance URL shortener with real-time analytics and custom CTA overlays.</b></p>
 
   <p>
-    <img src="https://img.shields.io/badge/Next.js-14-black?logo=next.js" alt="Next.js" />
+    <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js" />
     <img src="https://img.shields.io/badge/Express.js-505050?logo=express&logoColor=white" alt="Express" />
     <img src="https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql&logoColor=white" alt="PostgreSQL" />
     <img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white" alt="Redis" />
