@@ -1,12 +1,20 @@
-# 🔗 URL Shortener + Analytics
+<div align="center">
+  <img src="" alt="Snip.ly Banner" width="100%" style="border-radius: 12px; overflow: hidden;" />
+  
+  <br />
+  <br />
 
-> **Full-stack, production-ready URL shortener with real-time click analytics.**
+  <h1>✂️ Snip.ly</h1>
+  <p><b>A modern, high-performance URL shortener with real-time analytics and custom CTA overlays.</b></p>
 
-[![CI/CD](https://github.com/yourusername/url-shortener/actions/workflows/deploy.yml/badge.svg)](https://github.com/yourusername/url-shortener/actions)
-![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-14-black?logo=next.js" alt="Next.js" />
+    <img src="https://img.shields.io/badge/Express.js-505050?logo=express&logoColor=white" alt="Express" />
+    <img src="https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql&logoColor=white" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white" alt="Redis" />
+    <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" alt="Docker" />
+  </p>
+</div>
 
 ---
 
