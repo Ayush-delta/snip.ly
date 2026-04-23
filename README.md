@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="" alt="Snip.ly Banner" width="100%" style="border-radius: 12px; overflow: hidden;" />
+  <img src="https://sniply-frontend.pages.dev/banner.png" alt="Snip.ly Banner" width="100%" style="border-radius: 12px; overflow: hidden;" />
   
   <br />
   <br />
