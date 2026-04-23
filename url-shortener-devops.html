@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URL Shortener + Analytics — Full Stack DevOps Build Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #00e5ff;
+    --accent2: #bf5fff;
+    --accent3: #00ff9d;
+    --warn: #ff9800;
+    --red: #ff4757;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --font-head: 'Syne', sans-serif;
+    --font-code: 'JetBrains Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-code);
+    font-size: 13px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 60px 0 48px;
+    position: relative;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 100px; padding: 6px 16px; margin-bottom: 24px;
+    font-size: 11px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;
+    animation: fadeDown 0.6s ease both;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+  .hero h1 {
+    font-family: var(--font-head);
+    font-size: clamp(32px, 6vw, 56px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+  .hero h1 span.c1 { color: var(--accent); }
+  .hero h1 span.c2 { color: var(--accent2); }
+  .hero h1 span.c3 { color: var(--accent3); }
+
+  .hero-sub {
+    margin-top: 16px; color: var(--muted); font-size: 14px;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+
+  .stack-pills {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    margin-top: 28px;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+  .pill {
+    padding: 5px 14px; border-radius: 100px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid;
+  }
+  .pill.fe { background: rgba(0,229,255,0.08); border-color: rgba(0,229,255,0.3); color: var(--accent); }
+  .pill.be { background: rgba(191,95,255,0.08); border-color: rgba(191,95,255,0.3); color: var(--accent2); }
+  .pill.db { background: rgba(0,255,157,0.08); border-color: rgba(0,255,157,0.3); color: var(--accent3); }
+  .pill.dv { background: rgba(255,152,0,0.08); border-color: rgba(255,152,0,0.3); color: var(--warn); }
+
+  /* TIMELINE */
+  .timeline { margin: 48px 0 0; }
+  .phase {
+    display: grid; grid-template-columns: 140px 1fr; gap: 0 24px;
+    margin-bottom: 8px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .phase:nth-child(1){animation-delay:0.1s}
+  .phase:nth-child(2){animation-delay:0.15s}
+  .phase:nth-child(3){animation-delay:0.2s}
+  .phase:nth-child(4){animation-delay:0.25s}
+  .phase:nth-child(5){animation-delay:0.3s}
+  .phase:nth-child(6){animation-delay:0.35s}
+
+  .phase-time {
+    text-align: right; padding-top: 18px;
+    font-size: 11px; color: var(--muted); letter-spacing: 0.06em;
+    font-weight: 700; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .phase-body {
+    border-left: 2px solid var(--border);
+    padding: 0 0 32px 24px;
+    position: relative;
+  }
+  .phase-body::before {
+    content: '';
+    position: absolute; left: -7px; top: 20px;
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 2px solid var(--bg);
+  }
+  .phase:nth-child(1) .phase-body::before { background: var(--accent); }
+  .phase:nth-child(2) .phase-body::before { background: var(--accent2); }
+  .phase:nth-child(3) .phase-body::before { background: var(--accent3); }
+  .phase:nth-child(4) .phase-body::before { background: var(--warn); }
+  .phase:nth-child(5) .phase-body::before { background: var(--red); }
+  .phase:nth-child(6) .phase-body::before { background: #aaa; }
+
+  .phase-title {
+    font-family: var(--font-head);
+    font-size: 18px; font-weight: 700;
+    margin-bottom: 12px; padding-top: 12px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: rgba(0,229,255,0.3); }
+  .card-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--muted); margin-bottom: 10px;
+  }
+
+  /* CODE BLOCKS */
+  .code-block {
+    background: #0d0d14; border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; margin: 12px 0;
+  }
+  .code-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+  }
+  .code-dots { display: flex; gap: 6px; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .code-dots .r { background: #ff5f57; }
+  .code-dots .y { background: #febc2e; }
+  .code-dots .g { background: #28c840; }
+  pre {
+    padding: 16px 20px; overflow-x: auto; font-size: 12px;
+    line-height: 1.8; color: #cdd6f4;
+  }
+  .kw { color: #cba6f7; }
+  .str { color: #a6e3a1; }
+  .cm { color: #585b70; font-style: italic; }
+  .fn { color: #89dceb; }
+  .num { color: #fab387; }
+  .prop { color: #89b4fa; }
+
+  /* FOLDER TREE */
+  .tree {
+    background: #0d0d14; border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 24px;
+    font-size: 12.5px; line-height: 2;
+  }
+  .tree .dir { color: var(--accent2); font-weight: 700; }
+  .tree .file { color: #cdd6f4; }
+  .tree .note { color: var(--muted); font-size: 11px; }
+  .tree .indent1 { padding-left: 20px; }
+  .tree .indent2 { padding-left: 40px; }
+  .tree .indent3 { padding-left: 60px; }
+
+  /* CHECKLIST */
+  .checklist { list-style: none; }
+  .checklist li {
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .check { color: var(--accent3); font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+  /* PROMPT CARDS */
+  .prompt-card {
+    background: linear-gradient(135deg, rgba(191,95,255,0.06), rgba(0,229,255,0.06));
+    border: 1px solid rgba(191,95,255,0.25);
+    border-radius: 12px; padding: 18px 22px; margin-bottom: 10px;
+  }
+  .prompt-label { font-size: 10px; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 700; }
+  .prompt-text { font-size: 12.5px; color: #d0d0e8; line-height: 1.7; }
+
+  /* ENV TABLE */
+  .env-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .env-table th { text-align: left; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .env-table td { padding: 10px 12px; border-bottom: 1px solid rgba(42,42,61,0.5); vertical-align: top; }
+  .env-table tr:last-child td { border-bottom: none; }
+  .env-key { color: var(--accent); font-weight: 700; }
+  .env-val { color: var(--accent3); }
+  .env-desc { color: var(--muted); }
+
+  /* ARCH DIAGRAM */
+  .arch {
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 0; padding: 24px;
+    background: #0d0d14; border: 1px solid var(--border); border-radius: 12px;
+  }
+  .arch-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 18px; text-align: center;
+    min-width: 100px;
+  }
+  .arch-box .icon { font-size: 22px; display: block; margin-bottom: 4px; }
+  .arch-box .lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+  .arch-box .sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .arch-box.fe .lbl { color: var(--accent); }
+  .arch-box.be .lbl { color: var(--accent2); }
+  .arch-box.db .lbl { color: var(--accent3); }
+  .arch-box.dv .lbl { color: var(--warn); }
+  .arch-arrow {
+    color: var(--muted); font-size: 18px; padding: 0 8px;
+    display: flex; align-items: center;
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: var(--font-head); font-size: 24px; font-weight: 800;
+    margin-bottom: 20px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* DEPLOY STEPS */
+  .deploy-step {
+    display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start;
+  }
+  .step-num {
+    width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+    background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.3);
+    color: var(--accent); font-weight: 800; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-content h4 { font-family: var(--font-head); font-size: 14px; margin-bottom: 4px; }
+  .step-content p { color: var(--muted); font-size: 12px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media(max-width:600px) {
+    .phase { grid-template-columns: 1fr; }
+    .phase-time { text-align: left; padding-top: 0; }
+    .arch { gap: 8px; }
+    .arch-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge"><div class="dot"></div> 1-Day Vibe Code Build</div>
+    <h1><span class="c1">URL Shortener</span><br><span class="c2">+</span> Analytics <span class="c3">Dashboard</span></h1>
+    <p class="hero-sub">Full Stack · DevOps · Real-time Click Analytics · Docker · CI/CD</p>
+    <div class="stack-pills">
+      <span class="pill fe">React + Next.js</span>
+      <span class="pill be">Node.js + Express</span>
+      <span class="pill db">PostgreSQL + Redis</span>
+      <span class="pill dv">Docker + GitHub Actions</span>
+      <span class="pill dv">Nginx + Vercel/Render</span>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div class="section-title">🏗 Architecture</div>
+  <div class="arch">
+    <div class="arch-box fe"><span class="icon">⚛️</span><span class="lbl">Frontend</span><span class="sub">Next.js</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box be"><span class="icon">⚡</span><span class="lbl">API</span><span class="sub">Node/Express</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box db"><span class="icon">🐘</span><span class="lbl">PostgreSQL</span><span class="sub">URLs + Analytics</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box db"><span class="icon">🔴</span><span class="lbl">Redis</span><span class="sub">Cache + Rate limit</span></div>
+  </div>
+  <div style="display:flex;gap:12px;margin-top:12px;">
+    <div class="arch" style="flex:1;padding:14px;">
+      <div class="arch-box dv"><span class="icon">🐳</span><span class="lbl">Docker</span><span class="sub">Containerize</span></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box dv"><span class="icon">⚙️</span><span class="lbl">GitHub Actions</span><span class="sub">CI/CD Pipeline</span></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box dv"><span class="icon">🌐</span><span class="lbl">Render / VPS</span><span class="sub">Deploy</span></div>
+    </div>
+  </div>
+
+  <!-- FOLDER STRUCTURE -->
+  <div style="margin-top:48px;">
+  <div class="section-title">📁 Folder Structure</div>
+  <div class="tree">
+    <div><span class="dir">url-shortener/</span></div>
+    <div class="indent1"><span class="dir">frontend/</span> <span class="note">← Next.js app</span></div>
+    <div class="indent2"><span class="dir">src/app/</span></div>
+    <div class="indent3"><span class="file">page.jsx</span> <span class="note">← Shorten form</span></div>
+    <div class="indent3"><span class="file">dashboard/page.jsx</span> <span class="note">← Analytics</span></div>
+    <div class="indent2"><span class="file">Dockerfile</span></div>
+    <div class="indent1"><span class="dir">backend/</span> <span class="note">← Express API</span></div>
+    <div class="indent2"><span class="dir">src/</span></div>
+    <div class="indent3"><span class="file">routes/url.js</span> <span class="note">← POST /shorten, GET /:code</span></div>
+    <div class="indent3"><span class="file">routes/analytics.js</span> <span class="note">← GET /analytics/:code</span></div>
+    <div class="indent3"><span class="file">models/Url.js</span></div>
+    <div class="indent3"><span class="file">middleware/rateLimit.js</span></div>
+    <div class="indent2"><span class="file">Dockerfile</span></div>
+    <div class="indent1"><span class="file">docker-compose.yml</span> <span class="note">← Orchestrate all services</span></div>
+    <div class="indent1"><span class="file">.github/workflows/deploy.yml</span> <span class="note">← CI/CD</span></div>
+    <div class="indent1"><span class="file">nginx.conf</span> <span class="note">← Reverse proxy</span></div>
+    <div class="indent1"><span class="file">.env.example</span></div>
+  </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div style="margin-top:48px;">
+  <div class="section-title">⏱ Build Timeline</div>
+  <div class="timeline">
+
+    <!-- PHASE 1 -->
+    <div class="phase">
+      <div class="phase-time">0:00 – 1:00</div>
+      <div class="phase-body">
+        <div class="phase-title" style="color:var(--accent)">Phase 1 — Project Setup + DB Schema</div>
+        <div class="card">
+          <div class="card-label">What to do</div>
+          <ul class="checklist">
+            <li><span class="check">▸</span>Init Next.js frontend + Express backend repos</li>
+            <li><span class="check">▸</span>Setup PostgreSQL with Docker locally</li>
+            <li><span class="check">▸</span>Create DB schema: <code>urls</code> + <code>clicks</code> tables</li>
+            <li><span class="check">▸</span>Init Redis container for caching</li>
+          </ul>
+        </div>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span class="r"></span><span class="y"></span><span class="g"></span></div><span>schema.sql</span></div>
+          <pre><span class="cm">-- URLs table</span>
+<span class="kw">CREATE TABLE</span> urls (
+  id          <span class="prop">SERIAL PRIMARY KEY</span>,
+  original    <span class="prop">TEXT NOT NULL</span>,
+  short_code  <span class="prop">VARCHAR(10) UNIQUE NOT NULL</span>,
+  user_ip     <span class="prop">VARCHAR(50)</span>,
+  created_at  <span class="prop">TIMESTAMPTZ DEFAULT NOW()</span>,
+  expires_at  <span class="prop">TIMESTAMPTZ</span>
+);
+
+<span class="cm">-- Clicks analytics table</span>
+<span class="kw">CREATE TABLE</span> clicks (
+  id          <span class="prop">SERIAL PRIMARY KEY</span>,
+  short_code  <span class="prop">VARCHAR(10) REFERENCES</span> urls(short_code),
+  clicked_at  <span class="prop">TIMESTAMPTZ DEFAULT NOW()</span>,
+  country     <span class="prop">VARCHAR(50)</span>,
+  device      <span class="prop">VARCHAR(50)</span>,
+  referrer    <span class="prop">TEXT</span>
+);</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 2 -->
+    <div class="phase">
+      <div class="phase-time">1:00 – 3:00</div>
+      <div class="phase-body">
+        <div class="phase-title" style="color:var(--accent2)">Phase 2 — Backend API</div>
+        <div class="card">
+          <div class="card-label">Endpoints to build</div>
+          <ul class="checklist">
+            <li><span class="check">▸</span><code style="color:var(--accent3)">POST /api/shorten</code> — Generate short code, save to DB</li>
+            <li><span class="check">▸</span><code style="color:var(--accent3)">GET /:code</code> — Lookup, log click, redirect to original</li>
+            <li><span class="check">▸</span><code style="color:var(--accent3)">GET /api/analytics/:code</code> — Return click stats</li>
+            <li><span class="check">▸</span>Redis cache on <code>GET /:code</code> for speed</li>
+            <li><span class="check">▸</span>Rate limiting middleware (100 req/min per IP)</li>
+          </ul>
+        </div>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span class="r"></span><span class="y"></span><span class="g"></span></div><span>routes/url.js</span></div>
+          <pre><span class="cm">// POST /api/shorten</span>
+router.<span class="fn">post</span>(<span class="str">'/shorten'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { url, customCode } = req.body;
+  <span class="kw">const</span> code = customCode || <span class="fn">nanoid</span>(<span class="num">6</span>);
+  <span class="kw">await</span> db.<span class="fn">query</span>(
+    <span class="str">'INSERT INTO urls(original,short_code) VALUES($1,$2)'</span>,
+    [url, code]
+  );
+  res.<span class="fn">json</span>({ shortUrl: <span class="str">`https://yourdomain.com/${code}`</span> });
+});
+
+<span class="cm">// GET /:code — redirect + track</span>
+router.<span class="fn">get</span>(<span class="str">'/:code'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">let</span> cached = <span class="kw">await</span> redis.<span class="fn">get</span>(req.params.code);
+  <span class="kw">if</span> (!cached) {
+    <span class="kw">const</span> row = <span class="kw">await</span> db.<span class="fn">query</span>(
+      <span class="str">'SELECT original FROM urls WHERE short_code=$1'</span>,
+      [req.params.code]
+    );
+    cached = row.rows[<span class="num">0</span>]?.original;
+    <span class="kw">await</span> redis.<span class="fn">setex</span>(req.params.code, <span class="num">3600</span>, cached);
+  }
+  <span class="fn">logClick</span>(req.params.code, req); <span class="cm">// async, don't await</span>
+  res.<span class="fn">redirect</span>(<span class="num">301</span>, cached);
+});</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 3 -->
+    <div class="phase">
+      <div class="phase-time">3:00 – 5:00</div>
+      <div class="phase-body">
+        <div class="phase-title" style="color:var(--accent3)">Phase 3 — Frontend Dashboard</div>
+        <div class="card">
+          <div class="card-label">Pages to build</div>
+          <ul class="checklist">
+            <li><span class="check">▸</span>Home page — URL input form + copy short link</li>
+            <li><span class="check">▸</span>Dashboard — Charts: clicks over time, top countries, device breakdown</li>
+            <li><span class="check">▸</span>Use <code>recharts</code> for AreaChart + PieChart</li>
+            <li><span class="check">▸</span>QR code generation for each short URL</li>
+          </ul>
+        </div>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span class="r"></span><span class="y"></span><span class="g"></span></div><span>dashboard/page.jsx (key snippet)</span></div>
+          <pre><span class="kw">import</span> { AreaChart, Area, PieChart, Pie, Tooltip } <span class="kw">from</span> <span class="str">'recharts'</span>;
+
+<span class="kw">export default function</span> <span class="fn">Dashboard</span>() {
+  <span class="kw">const</span> [stats, setStats] = <span class="fn">useState</span>(<span class="kw">null</span>);
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="fn">fetch</span>(<span class="str">`/api/analytics/${code}`</span>)
+      .<span class="fn">then</span>(r => r.<span class="fn">json</span>())
+      .<span class="fn">then</span>(setStats);
+  }, []);
+
+  <span class="kw">return</span> (
+    &lt;AreaChart data={stats?.clicksOverTime}&gt;
+      &lt;Area dataKey=<span class="str">"clicks"</span> stroke=<span class="str">"#00e5ff"</span> fill=<span class="str">"rgba(0,229,255,0.1)"</span> /&gt;
+    &lt;/AreaChart&gt;
+  );
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 4 -->
+    <div class="phase">
+      <div class="phase-time">5:00 – 7:00</div>
+      <div class="phase-body">
+        <div class="phase-title" style="color:var(--warn)">Phase 4 — Docker + Nginx</div>
+        <div class="card">
+          <div class="card-label">DevOps tasks</div>
+          <ul class="checklist">
+            <li><span class="check">▸</span>Write <code>Dockerfile</code> for frontend and backend</li>
+            <li><span class="check">▸</span><code>docker-compose.yml</code> for all 4 services (fe, be, postgres, redis)</li>
+            <li><span class="check">▸</span>Nginx reverse proxy — route <code>/api/*</code> to backend, <code>/</code> to frontend</li>
+            <li><span class="check">▸</span>Environment variables via <code>.env</code></li>
+          </ul>
+        </div>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span class="r"></span><span class="y"></span><span class="g"></span></div><span>docker-compose.yml</span></div>
+          <pre><span class="prop">version</span>: <span class="str">'3.8'</span>
+<span class="prop">services</span>:
+  <span class="prop">frontend</span>:
+    <span class="prop">build</span>: ./frontend
+    <span class="prop">ports</span>: [<span class="str">"3000:3000"</span>]
+    <span class="prop">env_file</span>: .env
+
+  <span class="prop">backend</span>:
+    <span class="prop">build</span>: ./backend
+    <span class="prop">ports</span>: [<span class="str">"5000:5000"</span>]
+    <span class="prop">depends_on</span>: [postgres, redis]
+    <span class="prop">env_file</span>: .env
+
+  <span class="prop">postgres</span>:
+    <span class="prop">image</span>: <span class="str">postgres:15</span>
+    <span class="prop">volumes</span>: [<span class="str">pgdata:/var/lib/postgresql/data</span>]
+    <span class="prop">environment</span>:
+      POSTGRES_DB: urldb
+      POSTGRES_PASSWORD: secret
+
+  <span class="prop">redis</span>:
+    <span class="prop">image</span>: <span class="str">redis:7-alpine</span>
+
+  <span class="prop">nginx</span>:
+    <span class="prop">image</span>: <span class="str">nginx:alpine</span>
+    <span class="prop">volumes</span>: [<span class="str">./nginx.conf:/etc/nginx/nginx.conf</span>]
+    <span class="prop">ports</span>: [<span class="str">"80:80"</span>]
+    <span class="prop">depends_on</span>: [frontend, backend]
+
+<span class="prop">volumes</span>:
+  <span class="prop">pgdata</span>:</pre>
+        </div>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span class="r"></span><span class="y"></span><span class="g"></span></div><span>nginx.conf</span></div>
+          <pre><span class="prop">server</span> {
+  listen <span class="num">80</span>;
+
+  location /api/ {
+    proxy_pass http://backend:<span class="num">5000</span>/;
+  }
+
+  location / {
+    proxy_pass http://frontend:<span class="num">3000</span>/;
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 5 -->
+    <div class="phase">
+      <div class="phase-time">7:00 – 9:00</div>
+      <div class="phase-body">
+        <div class="phase-title" style="color:var(--red)">Phase 5 — GitHub Actions CI/CD</div>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><span class="r"></span><span class="y"></span><span class="g"></span></div><span>.github/workflows/deploy.yml</span></div>
+          <pre><span class="prop">name</span>: Deploy
+
+<span class="prop">on</span>:
+  <span class="prop">push</span>:
+    <span class="prop">branches</span>: [main]
+
+<span class="prop">jobs</span>:
+  <span class="prop">build-and-deploy</span>:
+    <span class="prop">runs-on</span>: ubuntu-latest
+
+    <span class="prop">steps</span>:
+      - <span class="prop">uses</span>: actions/checkout@v3
+
+      - <span class="prop">name</span>: Build Docker images
+        <span class="prop">run</span>: docker compose build
+
+      - <span class="prop">name</span>: Push to Docker Hub
+        <span class="prop">run</span>: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker compose push
+
+      - <span class="prop">name</span>: SSH deploy to server
+        <span class="prop">uses</span>: appleboy/ssh-action@master
+        <span class="prop">with</span>:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_KEY }}
+          <span class="prop">script</span>: |
+            cd ~/url-shortener
+            git pull
+            docker compose pull
+            docker compose up -d --force-recreate</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 6 -->
+    <div class="phase">
+      <div class="phase-time">9:00 – 10:00</div>
+      <div class="phase-body">
+        <div class="phase-title" style="color:#aaa">Phase 6 — Polish + Deploy</div>
+        <div class="card">
+          <div class="card-label">Final checklist</div>
+          <ul class="checklist">
+            <li><span class="check">✓</span>Add custom domain + SSL via Let's Encrypt / Certbot</li>
+            <li><span class="check">✓</span>Set all secrets in GitHub repo settings</li>
+            <li><span class="check">✓</span>Push to main → auto deploy fires</li>
+            <li><span class="check">✓</span>Test shorten → redirect → analytics flow</li>
+            <li><span class="check">✓</span>Add README with live URL + screenshots</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- ENV VARS -->
+  <div style="margin-top:12px;">
+  <div class="section-title">🔐 Environment Variables</div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <table class="env-table">
+      <thead><tr><th>Variable</th><th>Example Value</th><th>Used In</th></tr></thead>
+      <tbody>
+        <tr><td class="env-key">DATABASE_URL</td><td class="env-val">postgresql://user:pass@postgres:5432/urldb</td><td class="env-desc">Backend</td></tr>
+        <tr><td class="env-key">REDIS_URL</td><td class="env-val">redis://redis:6379</td><td class="env-desc">Backend</td></tr>
+        <tr><td class="env-key">BASE_URL</td><td class="env-val">https://yourdomain.com</td><td class="env-desc">Backend + Frontend</td></tr>
+        <tr><td class="env-key">NEXT_PUBLIC_API_URL</td><td class="env-val">https://yourdomain.com/api</td><td class="env-desc">Frontend</td></tr>
+        <tr><td class="env-key">DOCKER_USERNAME</td><td class="env-val">yourdockerhub</td><td class="env-desc">GitHub Actions</td></tr>
+        <tr><td class="env-key">SERVER_HOST</td><td class="env-val">123.456.789.0</td><td class="env-desc">GitHub Actions</td></tr>
+        <tr><td class="env-key">SSH_KEY</td><td class="env-val">(private key contents)</td><td class="env-desc">GitHub Actions</td></tr>
+      </tbody>
+    </table>
+  </div>
+  </div>
+
+  <!-- VIBE PROMPTS -->
+  <div style="margin-top:48px;">
+  <div class="section-title">🤖 Vibe Code Prompts</div>
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 1 — Backend scaffold</div>
+    <div class="prompt-text">"Build me a Node.js + Express REST API for a URL shortener. It should have POST /shorten (accepts a URL, generates a 6-char nanoid short code, saves to PostgreSQL), GET /:code (look up in Redis cache first, fallback to DB, redirect 301, log click to clicks table), GET /api/analytics/:code (return total clicks, clicks per day for last 30 days, top 5 countries, device breakdown). Use pg for Postgres and ioredis for Redis. Include error handling and a rate limiter middleware."</div>
+  </div>
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 2 — Frontend dashboard</div>
+    <div class="prompt-text">"Build a Next.js 14 analytics dashboard for a URL shortener. There should be a home page with a form to shorten URLs and copy button. A /dashboard/[code] page showing: total clicks count, an AreaChart of clicks per day (last 30 days), a PieChart of device types, a bar chart of top 5 countries. Use Tailwind CSS for styling, recharts for charts, and fetch data from /api/analytics/:code. Make it dark-themed and clean."</div>
+  </div>
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 3 — Docker + Nginx</div>
+    <div class="prompt-text">"Write a docker-compose.yml that orchestrates: Next.js frontend on port 3000, Express backend on port 5000, PostgreSQL 15 with a named volume, Redis 7 alpine, and Nginx as reverse proxy routing /api/* to backend and /* to frontend. Also write the nginx.conf and a multi-stage Dockerfile for both the frontend and backend for production builds."</div>
+  </div>
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 4 — GitHub Actions CI/CD</div>
+    <div class="prompt-text">"Write a GitHub Actions workflow that triggers on push to main. It should: build and push Docker images to Docker Hub, then SSH into my production server, pull the latest images, and run docker compose up -d --force-recreate. Use these secrets: DOCKER_USERNAME, DOCKER_PASSWORD, SERVER_HOST, SSH_KEY."</div>
+  </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="margin-top:60px;padding-top:24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div style="font-family:var(--font-head);font-weight:800;font-size:16px;">URL Shortener <span style="color:var(--accent)">+</span> Analytics</div>
+    <div style="color:var(--muted);font-size:11px;">Built in 1 day · React · Node · PostgreSQL · Redis · Docker · GitHub Actions</div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #070710;
+  --surface: #0e0e1a;
+  --card: #14142a;
+  --border: #1e1e38;
+  --accent: #00e5ff;
+  --accent2: #bf5fff;
+  --accent3: #00ff9d;
+  --warn: #ff9800;
+  --red: #ff4757;
+  --text: #e8e8f4;
+  --muted: #6060888;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono), monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Animated gradient mesh background ─────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 40%, rgba(0,229,255,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 55% 45% at 85% 20%, rgba(191,95,255,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 50% 90%, rgba(0,255,157,0.04) 0%, transparent 70%);
+  /* GPU-accelerate: promote to its own layer so it doesn't repaint the whole page */
+  will-change: opacity;
+  animation: meshDrift 18s ease-in-out infinite alternate;
+}
+@keyframes meshDrift {
+  from { opacity: 0.8; }
+  to   { opacity: 1; }
+}
+
+/* Subtle grid overlay — static, no animation needed */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.018) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Respect user's OS reduced-motion preference (also great for performance) */
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ── Glassmorphism utilities ─────────────────────────────────────── */
+.glass {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.glow-card {
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.glow-card:hover {
+  border-color: rgba(0,229,255,0.3) !important;
+  box-shadow: 0 0 0 1px rgba(0,229,255,0.15), 0 8px 32px rgba(0,229,255,0.06);
+}
+
+.glow-card-purple:hover {
+  border-color: rgba(191,95,255,0.35) !important;
+  box-shadow: 0 0 0 1px rgba(191,95,255,0.15), 0 8px 32px rgba(191,95,255,0.07);
+}
+
+/* ── Gradient text ───────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Input glow on focus ─────────────────────────────────────────── */
+.input-glow:focus-within {
+  border-color: rgba(0,229,255,0.35) !important;
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.08), 0 0 20px rgba(0,229,255,0.06);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #333350; }
+
+/* ── Animations ──────────────────────────────────────────────────── */
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.75)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slideIn { from{opacity:0;transform:translateX(-12px)} to{opacity:1;transform:translateX(0)} }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.animate-fadeUp { animation: fadeUp 0.6s ease both; }
+.animate-spin   { animation: spin 1s linear infinite; }
