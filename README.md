@@ -1,9 +1,4 @@
 <div align="center">
-  <img src="https://sniply-frontend.pages.dev/banner.png" alt="Snip.ly Banner" width="100%" style="border-radius: 12px; overflow: hidden;" />
-  
-  <br />
-  <br />
-
   <h1>✂️ Snip.ly</h1>
   <p><b>A modern, high-performance URL shortener with real-time analytics and custom CTA overlays.</b></p>
 
