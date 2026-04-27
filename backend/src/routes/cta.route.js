@@ -2,9 +2,12 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
+const { validate } = require('../validators/validate');
+const { createCtaSchema } = require('../validators/cta.validator');
+const { shortCodeParamSchema } = require('../validators/url.validator');
 
 // GET /api/cta/:code
-router.get('/:code', optionalAuth, async (req, res) => {
+router.get('/:code', optionalAuth, validate(shortCodeParamSchema, 'params'), async (req, res) => {
   try {
     const result = await db.query(
       'SELECT * FROM ctas WHERE short_code = $1',
@@ -21,23 +24,20 @@ router.get('/:code', optionalAuth, async (req, res) => {
 });
 
 // POST /api/cta — create or update CTA for a link
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, validate(createCtaSchema), async (req, res) => {
   try {
+    // All fields are validated, trimmed, and have defaults applied by Zod
     const {
       shortCode,
       message,
-      buttonText = 'Visit Us',
+      buttonText,
       buttonUrl,
-      position = 'bottom-left',
-      bgColor = '#1a1a26',
-      textColor = '#e8e8f0',
-      btnColor = '#00e5ff',
-      enabled = true,
+      position,
+      bgColor,
+      textColor,
+      btnColor,
+      enabled,
     } = req.body;
-
-    if (!shortCode || !message) {
-      return res.status(400).json({ error: 'shortCode and message are required.' });
-    }
 
     // Verify ownership of the URL
     const urlCheck = await db.query(
@@ -75,7 +75,7 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // DELETE /api/cta/:code — remove CTA
-router.delete('/:code', requireAuth, async (req, res) => {
+router.delete('/:code', requireAuth, validate(shortCodeParamSchema, 'params'), async (req, res) => {
   try {
     const check = await db.query(
       'SELECT id FROM ctas WHERE short_code = $1 AND user_id = $2',

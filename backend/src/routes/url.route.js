@@ -9,23 +9,16 @@ const redis = require('../redis');
 const { shortenLimiter } = require('../middleware/rateLimit');
 const { optionalAuth } = require('../middleware/auth');
 const { buildOverlayHTML } = require('../services/ctaOverlay');
+const { validate } = require('../validators/validate');
+const { shortenSchema, shortCodeParamSchema } = require('../validators/url.validator');
 
 // POST /api/shorten
-router.post('/shorten', shortenLimiter, optionalAuth, async (req, res) => {
+router.post('/shorten', shortenLimiter, optionalAuth, validate(shortenSchema), async (req, res) => {
   try {
+    // req.body.url is already validated (https/http only) and trimmed by Zod
     const { url, customCode } = req.body;
 
-    if (!url) {
-      return res.status(400).json({ error: 'URL is required.' });
-    }
-
-    try {
-      new URL(url);
-    } catch {
-      return res.status(400).json({ error: 'Invalid URL format.' });
-    }
-
-    const code = customCode?.trim() || generateShortCode();
+    const code = customCode || generateShortCode();
 
     if (customCode) {
       const existing = await db.query(
@@ -58,8 +51,8 @@ router.post('/shorten', shortenLimiter, optionalAuth, async (req, res) => {
   }
 });
 
-// GET /:code — CTA overlay or 301 redirect 
-router.get('/:code', async (req, res) => {
+// GET /:code — CTA overlay or 301 redirect
+router.get('/:code', validate(shortCodeParamSchema, 'params'), async (req, res) => {
   const { code } = req.params;
 
   try {

@@ -4,6 +4,8 @@ const bcrypt = require('bcryptjs');
 const { nanoid } = require('nanoid');
 const db = require('../db');
 const { signAccessToken } = require('../middleware/auth');
+const { validate } = require('../validators/validate');
+const { registerSchema, loginSchema } = require('../validators/auth.validator');
 
 const REFRESH_TTL_DAYS = parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS || '30', 10);
 const COOKIE_OPTS = {
@@ -15,19 +17,13 @@ const COOKIE_OPTS = {
 };
 
 // POST /api/auth/register
-router.post('/register', async (req, res) => {
+router.post('/register', validate(registerSchema), async (req, res) => {
   try {
+    // req.body is already cleaned and normalized by Zod at this point
     const { email, password, name } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required.' });
-    }
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
-    }
-
     // Check duplicate
-    const existing = await db.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+    const existing = await db.query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.rows.length > 0) {
       return res.status(409).json({ error: 'An account with this email already exists.' });
     }
@@ -35,7 +31,7 @@ router.post('/register', async (req, res) => {
     const hash = await bcrypt.hash(password, 12);
     const result = await db.query(
       'INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING id, email, name',
-      [email.toLowerCase(), hash, name || null]
+      [email, hash, name || null]
     );
 
     const user = result.rows[0];
@@ -53,16 +49,14 @@ router.post('/register', async (req, res) => {
 });
 
 //  POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', validate(loginSchema), async (req, res) => {
   try {
+    // req.body.email is already trimmed + lowercased by Zod
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required.' });
-    }
 
     const result = await db.query(
       'SELECT id, email, name, password_hash FROM users WHERE email = $1',
-      [email.toLowerCase()]
+      [email]
     );
 
     if (result.rows.length === 0) {

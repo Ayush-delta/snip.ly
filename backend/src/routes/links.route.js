@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { validate } = require('../validators/validate');
+const { shortCodeParamSchema } = require('../validators/url.validator');
 
 // ─── GET /api/links — all links for authenticated user ────────────────────────
 router.get('/', requireAuth, async (req, res) => {
@@ -35,8 +37,8 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-// ─── DELETE /api/links/:code ──────────────────────────────────────────────────
-router.delete('/:code', requireAuth, async (req, res) => {
+// ─── DELETE /api/links/:code ───────────────────────────────────────────────────────────
+router.delete('/:code', requireAuth, validate(shortCodeParamSchema, 'params'), async (req, res) => {
   try {
     const { code } = req.params;
 

@@ -6,7 +6,7 @@ const pool = new Pool({
 });
 
 pool.on('error', (err) => {
-  console.error('[DB] Unexpected error on idle client:', err.message);
+  console.error('Unexpected error on idle client:', err.message);
 });
 
 module.exports = pool;

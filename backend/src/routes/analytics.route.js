@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { validate } = require('../validators/validate');
+const { shortCodeParamSchema } = require('../validators/url.validator');
 
 // GET /api/analytics/:code
-router.get('/:code', async (req, res) => {
+router.get('/:code', validate(shortCodeParamSchema, 'params'), async (req, res) => {
   const { code } = req.params;
 
   try {
