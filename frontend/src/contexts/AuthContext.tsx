@@ -24,6 +24,8 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (token: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -128,9 +130,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return accessToken;
   }, [accessToken, refresh]);
 
+  async function forgotPassword(email: string) {
+    const res = await fetch(`${API}/auth/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Failed to send reset email");
+    }
+  }
+
+  async function resetPassword(token: string, password: string) {
+    const res = await fetch(`${API}/auth/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Failed to reset password");
+    }
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, accessToken, loading, login, register, logout, getToken }}
+      value={{ user, accessToken, loading, login, register, logout, getToken, forgotPassword, resetPassword }}
     >
       {children}
     </AuthContext.Provider>

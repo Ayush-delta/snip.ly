@@ -61,7 +61,26 @@ const loginSchema = z.object({
   password: z
     .string({ required_error: 'Password is required.' })
     .min(1, 'Password is required.')
-    .max(72, 'Password must be 72 characters or fewer.'),
+    .max(72, 'Password must be 72 characters or fewer.')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter.')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter.')
+    .regex(/[0-9]/, 'Password must contain at least one number.')
+    .regex(/[@$!%*?&#^()_+\-=/|"\'\`~]/, 'Password must contain at least one special character'),
 });
 
-module.exports = { PasswordSchema, registerSchema, loginSchema };
+const ForgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address.'),
+});
+
+const ResetPasswordSchema = z.object({
+  token: z.string().min(1, 'Token is required.'),
+  password: PasswordSchema,
+});
+
+module.exports = {
+  PasswordSchema,
+  registerSchema,
+  loginSchema,
+  ForgotPasswordSchema,
+  ResetPasswordSchema,
+};

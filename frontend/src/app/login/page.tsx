@@ -52,15 +52,22 @@ export default function LoginPage() {
               />
             </div>
 
-            <div style={{ marginBottom: 22 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={{ display: "block", fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Password</label>
               <input
                 type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 style={{ width: "100%", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 13, outline: "none", fontFamily: "var(--font-mono)", transition: "border-color 0.2s" }}
                 onFocus={(e) => (e.target.style.borderColor = "rgba(0,229,255,0.4)")}
-                onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
+                onBlur={(e)  => (e.target.style.borderColor = "var(--border)")}
               />
+            </div>
+
+            {/* Forgot password link — right-aligned under the password field */}
+            <div style={{ textAlign: "right", marginBottom: 18 }}>
+              <Link href="/forgot-password" style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, opacity: 0.85 }}>
+                Forgot password?
+              </Link>
             </div>
 
             {error && (

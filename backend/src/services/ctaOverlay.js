@@ -1,9 +1,3 @@
-/**
- * Builds a self-contained HTML page that loads the destination URL in a full-screen
- * iframe and overlays a branded CTA bar on top.
- *
- * Handles X-Frame-Options blocking gracefully with a fallback screen.
- */
 function buildOverlayHTML({ original, cta }) {
   const positions = {
     'bottom-left':   'left:20px;bottom:20px;',

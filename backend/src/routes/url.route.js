@@ -58,16 +58,31 @@ router.get('/:code', validate(shortCodeParamSchema, 'params'), async (req, res) 
   try {
     // Helper functions to gracefully fallback if Redis is down
     const safeRedisGet = async (k) => { try { return await redis.get(k); } catch (e) { return null; } };
-    const safeRedisSetex = async (k, t, v) => { try { await redis.setex(k, t, v); } catch (e) {} };
+    const safeRedisSetex = async (k, t, v) => { try { await redis.setEx(k, t, v); } catch (e) {} };
 
     // 1. Try Redis cache for URL and CTA
-    let original = await safeRedisGet(`url:${code}`);
+    let cachedUrlData = await safeRedisGet(`url:${code}`);
+    let original = null;
+    let urlId = null;
     let ctaCache = await safeRedisGet(`cta:${code}`); // 'no' | JSON string | null
     let ctaData = null;
 
-    if (!original) {
+    if (cachedUrlData) {
+      try {
+        const parsed = JSON.parse(cachedUrlData);
+        original = parsed.original;
+        urlId = parsed.id;
+      } catch (e) {
+        // Fallback for legacy plain-string cache
+        original = cachedUrlData;
+        const result = await db.query('SELECT id FROM urls WHERE short_code = $1', [code]);
+        if (result.rows.length > 0) urlId = result.rows[0].id;
+      }
+    }
+
+    if (!original || !urlId) {
       const result = await db.query(
-        'SELECT original, expires_at FROM urls WHERE short_code = $1',
+        'SELECT id, original, expires_at FROM urls WHERE short_code = $1',
         [code]
       );
 
@@ -82,7 +97,8 @@ router.get('/:code', validate(shortCodeParamSchema, 'params'), async (req, res) 
       }
 
       original = row.original;
-      await safeRedisSetex(`url:${code}`, 3600, original);
+      urlId = row.id;
+      await safeRedisSetex(`url:${code}`, 3600, JSON.stringify({ id: urlId, original }));
     }
 
     // 2. Check for CTA (cached or DB)
@@ -102,7 +118,7 @@ router.get('/:code', validate(shortCodeParamSchema, 'params'), async (req, res) 
     }
 
     // 3. Log click asynchronously
-    logClick(code, req).catch((err) => console.error('[logClick]', err.message));
+    logClick(urlId, req).catch((err) => console.error('[logClick]', err.message));
 
     // 4. Serve CTA overlay or redirect
     if (ctaData) {
@@ -119,7 +135,7 @@ router.get('/:code', validate(shortCodeParamSchema, 'params'), async (req, res) 
 });
 
 // Helper: log click
-async function logClick(shortCode, req) {
+async function logClick(urlId, req) {
   const ip =
     req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip || '';
   const ua = req.headers['user-agent'] || '';
@@ -133,9 +149,9 @@ async function logClick(shortCode, req) {
   const browser = parser.getBrowser().name || 'Unknown';
 
   await db.query(
-    `INSERT INTO clicks (short_code, country, device, browser, referrer, ip)
+    `INSERT INTO clicks (url_id, country, device, browser, referrer, ip)
      VALUES ($1, $2, $3, $4, $5, $6)`,
-    [shortCode, country, device, browser, referrer, ip]
+    [urlId, country, device, browser, referrer, ip]
   );
 }
 
