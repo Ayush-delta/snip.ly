@@ -1,4 +1,24 @@
 require('dotenv').config();
+
+// ── Global unhandled rejection handler ─────────────────────────────────────────
+// node-redis throws an AggregateError when reconnectStrategy gives up.
+// We catch it here so Redis being unavailable never kills the process.
+// All other unhandled rejections still crash the server (correct behavior).
+process.on('unhandledRejection', (err) => {
+  const isRedisError =
+    err?.code === 'ECONNREFUSED' ||
+    (err instanceof AggregateError && err.errors?.some((e) => e.code === 'ECONNREFUSED'));
+
+  if (isRedisError) {
+    console.error('[Redis] Connection ultimately failed — running without Redis.');
+    return; // suppress: app continues without Redis
+  }
+
+  // All other unhandled rejections are real bugs → crash and let nodemon/PM2 restart
+  console.error('[FATAL] Unhandled rejection:', err);
+  process.exit(1);
+});
+
 const express    = require('express');
 const cors       = require('cors');
 const helmet     = require('helmet');
