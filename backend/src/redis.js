@@ -1,8 +1,5 @@
 const { createClient } = require('redis');
 
-// Only connect to Redis if a URL is explicitly configured.
-// In local dev without Redis, we export a safe no-op mock so the app
-// boots cleanly and all Redis-dependent features degrade gracefully.
 if (!process.env.REDIS_URL) {
   console.log('[Redis] No REDIS_URL set — running without Redis (rate limiting & caching disabled).');
   module.exports = {
@@ -12,7 +9,7 @@ if (!process.env.REDIS_URL) {
     sendCommand: async () => null,
     on: () => {},
   };
-  return; // CommonJS early exit — nothing below runs
+  return;
 }
 
 const redis = createClient({

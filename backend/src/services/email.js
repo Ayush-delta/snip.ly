@@ -1,13 +1,11 @@
 const { Resend } = require('resend');
 
 const resendApiKey = process.env.RESEND_API_KEY;
-// Initialize Resend if API key exists
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-/**
- * Sends a password reset email.
- * If RESEND_API_KEY is not set (e.g. local dev), it just logs the link to the console.
- */
+
+ // Sends a password reset email.
+ 
 async function sendPasswordResetEmail(toEmail, resetToken, frontendUrl) {
   const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
   

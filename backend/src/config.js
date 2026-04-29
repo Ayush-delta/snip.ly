@@ -28,27 +28,23 @@ function requireEnvInProd(name, devFallback) {
 }
 
 module.exports = {
-  // ── Auth ────────────────────────────────────────────────────────────────────
-  // In production JWT_SECRET MUST be set — a missing/hardcoded secret means
-  // any attacker can forge valid tokens for any user.
+
   JWT_SECRET: requireEnvInProd('JWT_SECRET', 'dev-secret-change-in-production'),
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '15m',
 
-  // ── Database ─────────────────────────────────────────────────────────────────
+  // Database
   DATABASE_URL: requireEnv('DATABASE_URL'),
 
-  // ── Redis ────────────────────────────────────────────────────────────────────
+  // Redis
   REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
 
-  // ── Server ───────────────────────────────────────────────────────────────────
+  // Server
   PORT: parseInt(process.env.PORT || '5000', 10),
   NODE_ENV: process.env.NODE_ENV || 'development',
 
-  // ── CORS ─────────────────────────────────────────────────────────────────────
-  // In production, FRONTEND_URL must be set — falling back to localhost:3000
-  // in prod would silently block all real users.
+  // CORS
   FRONTEND_URL: requireEnvInProd('FRONTEND_URL', 'http://localhost:3000'),
 
-  // ── Tokens ───────────────────────────────────────────────────────────────────
+  // Tokens
   REFRESH_TOKEN_EXPIRES_DAYS: parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS || '30', 10),
 };

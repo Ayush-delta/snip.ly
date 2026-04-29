@@ -1,9 +1,5 @@
 require('dotenv').config();
 
-// ── Global unhandled rejection handler ─────────────────────────────────────────
-// node-redis throws an AggregateError when reconnectStrategy gives up.
-// We catch it here so Redis being unavailable never kills the process.
-// All other unhandled rejections still crash the server (correct behavior).
 process.on('unhandledRejection', (err) => {
   const isRedisError =
     err?.code === 'ECONNREFUSED' ||
@@ -29,13 +25,8 @@ const { PORT, FRONTEND_URL, NODE_ENV } = require('./config');
 
 const app = express();
 
-// ── Security headers (helmet) ──────────────────────────────────────────────────
-// Sets X-Frame-Options, X-Content-Type-Options, HSTS, CSP, Referrer-Policy etc.
 app.use(helmet());
 
-// ── CORS ────────────────────────────────────────────────────────────────────────
-// FRONTEND_URL is enforced by config.js — it crashes loudly in production
-// if the var is missing rather than silently blocking all real users.
 app.use(cors({
   origin: FRONTEND_URL,
   credentials: true,
@@ -43,21 +34,18 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// ── Body parsing ────────────────────────────────────────────────────────────────
-// 10kb cap — prevents request body flooding attacks
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 app.set('trust proxy', 1);
 
-// ── Global rate limiter ─────────────────────────────────────────────────────────
 app.use(limiter);
 
-// ── Health ──────────────────────────────────────────────────────────────────────
+// Health
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ── Routes ──────────────────────────────────────────────────────────────────────
+// Routes
 const urlRoutes       = require('./routes/url.route');
 const analyticsRoutes = require('./routes/analytics.route');
 const authRoutes      = require('./routes/auth.route');
@@ -78,12 +66,12 @@ app.get('/:code', (req, res, next) => {
   urlRoutes(req, res, next);
 });
 
-// ── 404 ─────────────────────────────────────────────────────────────────────────
+// 404
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found.' });
 });
 
-// ── Global error handler ─────────────────────────────────────────────────────────
+// Global error handler
 // MUST have 4 arguments — Express identifies error handlers by arity.
 // Catches any error passed to next(err) or thrown in async middleware.
 // In production: never expose stack traces to clients.
@@ -97,7 +85,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ── Startup ──────────────────────────────────────────────────────────────────────
+// Startup 
 // Verify DB connection before accepting traffic — fail fast if misconfigured.
 async function start() {
   await db.query('SELECT 1');
