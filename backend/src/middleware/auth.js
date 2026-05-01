@@ -16,7 +16,6 @@ async function requireAuth(req, res, next) {
   }
 }
 
-//Optional auth (attaches user if token present, continues either way)
 async function optionalAuth(req, res, next) {
   const token = extractToken(req);
   if (token) {

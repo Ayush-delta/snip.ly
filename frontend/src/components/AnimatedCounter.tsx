@@ -35,7 +35,7 @@ export default function AnimatedCounter({ target, suffix = "", duration = 1800 }
   }, [target, duration]);
 
   return (
-    <span ref={ref}>
+    <span ref={ref} suppressHydrationWarning>
       {count.toLocaleString()}
       {suffix}
     </span>

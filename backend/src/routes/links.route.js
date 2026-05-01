@@ -17,7 +17,7 @@ router.get('/', requireAuth, async (req, res) => {
          COUNT(c.id)::int AS click_count,
          EXISTS(SELECT 1 FROM ctas ct WHERE ct.short_code = u.short_code AND ct.enabled = true) AS has_cta
        FROM urls u
-       LEFT JOIN clicks c ON c.short_code = u.short_code
+       LEFT JOIN clicks c ON c.url_id = u.id
        WHERE u.user_id = $1
        GROUP BY u.short_code, u.original, u.created_at, u.expires_at
        ORDER BY u.created_at DESC`,

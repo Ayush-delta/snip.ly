@@ -21,7 +21,7 @@ interface AuthContextType {
   accessToken: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, confirmPassword: string) => Promise<void>;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
   forgotPassword: (email: string) => Promise<void>;
@@ -95,12 +95,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   //Register
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, confirmPassword: string) => {
     const res = await fetch(`${API}/auth/register`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, confirmPassword }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Registration failed");

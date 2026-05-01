@@ -54,7 +54,7 @@ export default function HeroPreview() {
         <div style={{ color: "var(--muted)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
           Total Clicks
         </div>
-        <div style={{ color: "var(--accent)", fontSize: 36, fontFamily: "var(--font-syne)", fontWeight: 900, lineHeight: 1 }}>
+        <div style={{ color: "var(--accent)", fontSize: 36, fontFamily: "var(--font-syne)", fontWeight: 900, lineHeight: 1 }} suppressHydrationWarning>
           {count.toLocaleString()}
         </div>
         <div style={{ color: "var(--accent3)", fontSize: 11, marginTop: 6 }}>

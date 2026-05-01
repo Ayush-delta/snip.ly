@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import QRCodeComponent from "@/components/QRCode";
@@ -40,6 +40,8 @@ const HOW_IT_WORKS = [
 
 export default function HomePage() {
   const { user, getToken } = useAuth();
+  const [year, setYear] = useState<number | null>(null);
+  useEffect(() => { setYear(new Date().getFullYear()); }, []);
 
   const [url, setUrl] = useState("");
   const [customCode, setCustomCode] = useState("");
@@ -327,8 +329,8 @@ export default function HomePage() {
           </div>
 
           {/* Copyright */}
-          <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>
-            Copyright © {new Date().getFullYear()} Sniply.
+          <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }} suppressHydrationWarning>
+            Copyright © {year ?? ""} Sniply.
           </div>
         </div>
       </footer>

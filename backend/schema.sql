@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS urls (
 -- Clicks analytics table
 CREATE TABLE IF NOT EXISTS clicks (
   id          SERIAL PRIMARY KEY,
-  short_code  VARCHAR(10) REFERENCES urls(short_code) ON DELETE CASCADE,
+  url_id      INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE,
   clicked_at  TIMESTAMPTZ DEFAULT NOW(),
   country     VARCHAR(100),
   device      VARCHAR(50),
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS ctas (
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_urls_short_code   ON urls(short_code);
 CREATE INDEX IF NOT EXISTS idx_urls_user_id      ON urls(user_id);
-CREATE INDEX IF NOT EXISTS idx_clicks_short_code ON clicks(short_code);
+CREATE INDEX IF NOT EXISTS idx_clicks_url_id      ON clicks(url_id);
 CREATE INDEX IF NOT EXISTS idx_clicks_clicked_at ON clicks(clicked_at);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens    ON refresh_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_ctas_short_code   ON ctas(short_code);

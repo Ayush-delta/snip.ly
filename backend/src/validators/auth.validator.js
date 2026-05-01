@@ -1,8 +1,5 @@
 const { z } = require('zod');
 
-// ─── Reusable password complexity schema ──────────────────────────────────────
-// Applied to register (full complexity) and login (max only — no complexity
-// check on login so existing accounts with weaker passwords still work).
 const PasswordSchema = z
   .string({ required_error: 'Password is required.' })
   .min(8, 'Password must be at least 8 characters.')
@@ -12,12 +9,7 @@ const PasswordSchema = z
   .regex(/[0-9]/, 'Password must contain at least one number.')
   .regex(/[@$!%*?&#^()_+\-=/|"\'\`~]/, 'Password must contain at least one special character');
 
-// ─── POST /api/auth/register ──────────────────────────────────────────────────
-// Notes:
-//  - email is normalized to lowercase + trimmed by Zod before hitting the DB
-//  - confirmPassword is validated here but intentionally NOT saved — the route
-//    only destructures { email, password, name } so it never reaches bcrypt/DB
-//  - .refine() runs AFTER all field checks, attaches error to confirmPassword
+
 const registerSchema = z
   .object({
     email: z
@@ -49,7 +41,7 @@ const registerSchema = z
 
 // ─── POST /api/auth/login ─────────────────────────────────────────────────────
 // Login does NOT apply complexity rules — existing users may have passwords
-// that predate the complexity requirement. Only max(72) matters here.
+// that predate the complexity requirement. Only min(1) and max(72) matter here.
 const loginSchema = z.object({
   email: z
     .string({ required_error: 'Email is required.' })
@@ -61,11 +53,7 @@ const loginSchema = z.object({
   password: z
     .string({ required_error: 'Password is required.' })
     .min(1, 'Password is required.')
-    .max(72, 'Password must be 72 characters or fewer.')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter.')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter.')
-    .regex(/[0-9]/, 'Password must contain at least one number.')
-    .regex(/[@$!%*?&#^()_+\-=/|"\'\`~]/, 'Password must contain at least one special character'),
+    .max(72, 'Password must be 72 characters or fewer.'),
 });
 
 const ForgotPasswordSchema = z.object({
