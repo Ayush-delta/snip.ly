@@ -22,13 +22,16 @@
 | 🔗 URL Shortening | 6-char nanoid codes or custom aliases |
 | ⚡ Redis Cache | Sub-millisecond redirects with 1-hour TTL (graceful degradation if Redis unavailable) |
 | 📊 Click Analytics | Total clicks, daily trends (30d), countries, devices, browsers — owner-only |
+| 🗂 Link Management | Full-featured panel with search, sort (date/clicks), pagination, delete, and inline shortening |
 | 🌍 Geo Tracking | Country detection via geoip-lite |
 | 📱 Device Detection | Desktop / mobile / tablet via UA Parser |
-| 📷 QR Codes | Auto-generated for every short link |
+| 📷 QR Codes | Auto-generated SVG format downloads for high-resolution sharing |
 | 🛡 Rate Limiting | Redis-backed: 100 req/min global, 20 req/min for shorten |
 | 🔐 JWT Auth | 15-minute access tokens + 30-day rotating refresh tokens (SHA-256 hashed in DB) |
+| 💳 Interactive Pricing | Billing toggle (monthly/annual) and fully functional checkout simulator modal |
 | 📧 Password Reset | Secure 15-minute reset tokens via Resend email (console simulation in dev) |
 | 🎯 CTA Overlays | Custom call-to-action banners overlaid on shortened links |
+| 🎨 Modern & Responsive | Beautiful minimalist UI, custom interactive components, and auth-responsive navigation |
 | 🐳 Dockerized | 5-service docker-compose stack |
 | ⚙️ CI/CD | GitHub Actions → Docker Hub → SSH deploy |
 | 🔀 Nginx Proxy | Reverse proxy routing all services |
@@ -82,12 +85,25 @@ snip.ly/
 ├── frontend/                         ← Next.js 15 (App Router, TypeScript)
 │   └── src/
 │       ├── app/
-│       │   ├── page.tsx              ← Home — shorten form + QR code
+│       │   ├── page.tsx              ← Home — shorten form, toggleable SVG QR code downloader
+│       │   ├── (footer)/             ← Footer pages (Pricing, Features, Privacy, Terms, Support)
+│       │   │   ├── pricing/page.tsx  ← Pricing plans + simulated checkout modal
+│       │   │   └── ...
 │       │   ├── login/page.tsx
 │       │   ├── register/page.tsx     ← Live password strength meter + complexity rules
 │       │   ├── forgot-password/      ← Request password reset
 │       │   ├── reset-password/       ← Set new password (strength meter reused)
-│       │   └── dashboard/[code]/     ← Analytics dashboard
+│       │   ├── dashboard/
+│       │   │   ├── page.tsx          ← Link management (search, sort, paginate, inline shortening)
+│       │   │   └── [code]/page.tsx   ← Real-time analytics dashboard & custom CTA builder
+│       │   ├── globals.css           ← Main styling and custom tailwind-like custom CSS tokens
+│       │   └── icon.svg              ← Tab brand favicon
+│       ├── components/
+│       │   ├── Logo.tsx              ← Reusable brand logo (square-arrow branding)
+│       │   ├── QRCode.tsx            ← Reusable QR code canvas / SVG renderer
+│       │   ├── Sparkline.tsx         ← Click trends mini-chart
+│       │   ├── AnimatedCounter.tsx   ← Dynamic numbers rolling animation
+│       │   └── TypewriterText.tsx    ← Visual typing hero effect
 │       └── contexts/AuthContext.tsx  ← JWT + refresh token management
 │
 ├── backend/                          ← Express API
