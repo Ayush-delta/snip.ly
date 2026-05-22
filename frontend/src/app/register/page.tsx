@@ -1,8 +1,10 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import Logo from "@/components/Logo";
 
 const RULES = [
   { id: "len",   label: "At least 8 characters",           test: (p: string) => p.length >= 8 },
@@ -17,11 +19,13 @@ function getStrength(password: string): number {
 }
 
 const STRENGTH_LABELS = ["", "Weak", "Fair", "Good", "Strong", "Very Strong"];
-const STRENGTH_COLORS = ["", "#ff4757", "#ffa502", "#eccc68", "#2ed573", "#00e5ff"];
+const STRENGTH_COLORS = ["", "#D85A30", "#D85A30", "#185FA5", "#185FA5", "#1D9E75"];
 
-export default function RegisterPage() {
+function RegisterForm() {
   const { register, user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/dashboard";
 
   const [name,     setName]     = useState("");
   const [email,    setEmail]    = useState("");
@@ -35,8 +39,8 @@ export default function RegisterPage() {
   const [touched,    setTouched]    = useState({ password: false });
 
   useEffect(() => {
-    if (!loading && user) router.replace("/dashboard");
-  }, [user, loading, router]);
+    if (!loading && user) router.replace(redirect);
+  }, [user, loading, router, redirect]);
 
   const strength = getStrength(password);
   const allRulesPass = strength === RULES.length;
@@ -49,7 +53,6 @@ export default function RegisterPage() {
     }
   }, [email]);
 
-  // Validate confirm password on blur
   const handleConfirmBlur = useCallback(() => {
     if (confirm && confirm !== password) {
       setConfirmErr("Passwords do not match.");
@@ -62,7 +65,6 @@ export default function RegisterPage() {
     e.preventDefault();
     setSubmitErr("");
 
-    // Client-side guard — backend enforces the same rules
     if (!allRulesPass) {
       return setSubmitErr("Please meet all password requirements.");
     }
@@ -74,7 +76,7 @@ export default function RegisterPage() {
     setSubmitting(true);
     try {
       await register(name, email, password, confirm);
-      router.push("/dashboard");
+      router.push(redirect);
     } catch (err: unknown) {
       setSubmitErr(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -82,146 +84,161 @@ export default function RegisterPage() {
     }
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%", background: "rgba(255,255,255,0.03)",
-    border: "1px solid var(--border)", borderRadius: 10,
-    padding: "12px 14px", color: "var(--text)", fontSize: 13,
-    outline: "none", fontFamily: "var(--font-mono)", transition: "border-color 0.2s",
-    boxSizing: "border-box",
-  };
-  const labelStyle: React.CSSProperties = {
-    display: "block", fontSize: 11, color: "var(--muted)",
-    textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6,
-  };
-  const fieldErrStyle: React.CSSProperties = {
-    fontSize: 11, color: "#ff4757", marginTop: 5,
-  };
-
   return (
-    <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1, padding: "24px" }}>
-      <div style={{ width: "100%", maxWidth: 440 }}>
-        <Link href="/" style={{ display: "block", textAlign: "center", fontFamily: "var(--font-syne)", fontSize: 22, fontWeight: 900, color: "var(--accent)", marginBottom: 32 }}>
-          snip<span style={{ color: "var(--accent2)" }}>.</span>ly
+    <div className="bg-white border border-05 border-default rounded-[12px] p-8 flex flex-col gap-6">
+      <div className="text-center">
+        <h1 className="text-[20px] font-medium text-[#1a1a18] mb-1">Create your account</h1>
+        <p className="text-[13px] text-[#5a5a56]">Free forever. No credit card needed.</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* Name */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] text-[#5a5a56] uppercase tracking-wider font-medium">Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your name"
+            autoComplete="name"
+            className="w-full h-[40px] px-3 border border-05 border-default rounded-[8px] text-[13px] text-[#1a1a18] outline-none focus:border-[#185FA5] focus:ring-3 focus:ring-[#185FA5]/15 transition-all bg-white"
+          />
+        </div>
+
+        {/* Email */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] text-[#5a5a56] uppercase tracking-wider font-medium">Email *</label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setEmailErr(""); }}
+            onBlur={handleEmailBlur}
+            placeholder="you@example.com"
+            autoComplete="email"
+            className={`w-full h-[40px] px-3 border border-05 rounded-[8px] text-[13px] text-[#1a1a18] outline-none focus:border-[#185FA5] focus:ring-3 focus:ring-[#185FA5]/15 transition-all bg-white ${
+              emailErr ? "border-[#D85A30]" : "border-default"
+            }`}
+          />
+          {emailErr && <p className="text-[11px] text-[#D85A30] mt-1">{emailErr}</p>}
+        </div>
+
+        {/* Password */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] text-[#5a5a56] uppercase tracking-wider font-medium">Password *</label>
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); setTouched((t) => ({ ...t, password: true })); }}
+            placeholder="Min. 8 characters"
+            autoComplete="new-password"
+            className="w-full h-[40px] px-3 border border-05 border-default rounded-[8px] text-[13px] text-[#1a1a18] outline-none focus:border-[#185FA5] focus:ring-3 focus:ring-[#185FA5]/15 transition-all bg-white"
+          />
+
+          {/* Password strength visual */}
+          {touched.password && password.length > 0 && (
+            <div className="mt-2">
+              <div className="flex gap-1 mb-1">
+                {[1, 2, 3, 4, 5].map((seg) => (
+                  <div
+                    key={seg}
+                    className="flex-1 h-[3px] rounded-[1px] transition-colors"
+                    style={{
+                      backgroundColor: seg <= strength ? STRENGTH_COLORS[strength] : "rgba(0,0,0,0.06)",
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="text-[11px] font-medium mb-2" style={{ color: STRENGTH_COLORS[strength] }}>
+                {STRENGTH_LABELS[strength]}
+              </p>
+
+              <div className="flex flex-col gap-1">
+                {RULES.map((r) => {
+                  const ok = r.test(password);
+                  return (
+                    <p key={r.id} className={`text-[11px] flex items-center gap-1.5 ${ok ? "text-[#1D9E75]" : "text-[#9a9a96]"}`}>
+                      <span>{ok ? "✓" : "○"}</span> {r.label}
+                    </p>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Confirm Password */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] text-[#5a5a56] uppercase tracking-wider font-medium">Confirm password *</label>
+          <input
+            type="password"
+            required
+            value={confirm}
+            onChange={(e) => { setConfirm(e.target.value); setConfirmErr(""); }}
+            onBlur={handleConfirmBlur}
+            placeholder="Repeat password"
+            autoComplete="new-password"
+            className={`w-full h-[40px] px-3 border border-05 rounded-[8px] text-[13px] text-[#1a1a18] outline-none focus:border-[#185FA5] focus:ring-3 focus:ring-[#185FA5]/15 transition-all bg-white ${
+              confirmErr ? "border-[#D85A30]" : "border-default"
+            }`}
+          />
+          {confirmErr && <p className="text-[11px] text-[#D85A30] mt-1">{confirmErr}</p>}
+          {confirm.length > 0 && !confirmErr && password === confirm && (
+            <p className="text-[11px] text-[#1D9E75] mt-1">✓ Passwords match</p>
+          )}
+        </div>
+
+        {submitErr && (
+          <div className="bg-[#D85A30]/10 border border-05 border-[#D85A30]/30 text-[#D85A30] rounded-[8px] p-3 text-[12px]">
+            {submitErr}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full h-[40px] bg-[#185FA5] text-[#E6F1FB] hover:bg-[#0C447C] rounded-[8px] text-[13px] font-medium transition-colors flex items-center justify-center gap-2 disabled:bg-[#185FA5]/40"
+        >
+          {submitting ? (
+            <>
+              <svg className="animate-spin h-4 w-4 text-[#E6F1FB]" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Creating account
+            </>
+          ) : (
+            "Create Account"
+          )}
+        </button>
+      </form>
+
+      <p className="text-[12px] text-[#5a5a56] text-center">
+        Already have an account?{" "}
+        <Link href={redirect !== "/dashboard" ? `/login?redirect=${encodeURIComponent(redirect)}` : "/login"} className="text-[#185FA5] hover:underline font-medium">Sign in</Link>
+      </p>
+    </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <main className="min-h-screen bg-[#f7f7f5] flex flex-col items-center justify-center p-6 text-[#1a1a18]">
+      <div className="w-full max-w-[400px]">
+        {/* Logo */}
+        <Link href="/" className="flex justify-center mb-6 hover:opacity-90 transition-opacity">
+          <Logo fontSize={18} size={24} />
         </Link>
 
-        <div className="glass" style={{ border: "1px solid var(--border)", borderRadius: 20, padding: "36px 32px" }}>
-          <h1 style={{ fontFamily: "var(--font-syne)", fontSize: 24, fontWeight: 800, marginBottom: 6, textAlign: "center" }}>Create your account</h1>
-          <p style={{ color: "var(--muted)", fontSize: 13, textAlign: "center", marginBottom: 28 }}>Free forever. No credit card needed.</p>
-
-          <form onSubmit={handleSubmit}>
-            {/* Name */}
-            <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Name</label>
-              <input
-                type="text" value={name} onChange={(e) => setName(e.target.value)}
-                placeholder="Your name" autoComplete="name"
-                style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(0,229,255,0.4)")}
-                onBlur={(e)  => (e.target.style.borderColor = "var(--border)")}
-              />
-            </div>
-
-            {/* Email */}
-            <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Email <span style={{ color: "#ff4757" }}>*</span></label>
-              <input
-                type="email" required value={email}
-                onChange={(e) => { setEmail(e.target.value); setEmailErr(""); }}
-                onBlur={handleEmailBlur}
-                placeholder="you@example.com" autoComplete="email"
-                style={{ ...inputStyle, borderColor: emailErr ? "rgba(255,71,87,0.5)" : undefined }}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(0,229,255,0.4)")}
-              />
-              {emailErr && <p style={fieldErrStyle}>⚠ {emailErr}</p>}
-            </div>
-
-            {/* Password + strength meter */}
-            <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Password <span style={{ color: "#ff4757" }}>*</span></label>
-              <input
-                type="password" required value={password}
-                onChange={(e) => { setPassword(e.target.value); setTouched((t) => ({ ...t, password: true })); }}
-                placeholder="Min. 8 characters" autoComplete="new-password"
-                style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(0,229,255,0.4)")}
-                onBlur={(e)  => (e.target.style.borderColor = "var(--border)")}
-              />
-
-              {/* Strength bar */}
-              {touched.password && password.length > 0 && (
-                <div style={{ marginTop: 8 }}>
-                  <div style={{ display: "flex", gap: 4, marginBottom: 5 }}>
-                    {[1,2,3,4,5].map((seg) => (
-                      <div key={seg} style={{
-                        flex: 1, height: 3, borderRadius: 2,
-                        background: seg <= strength ? STRENGTH_COLORS[strength] : "rgba(255,255,255,0.08)",
-                        transition: "background 0.3s",
-                      }} />
-                    ))}
-                  </div>
-                  <p style={{ fontSize: 10, color: STRENGTH_COLORS[strength], marginBottom: 6, fontWeight: 600 }}>
-                    {STRENGTH_LABELS[strength]}
-                  </p>
-
-                  {/* Per-rule checklist */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                    {RULES.map((r) => {
-                      const ok = r.test(password);
-                      return (
-                        <p key={r.id} style={{ fontSize: 11, color: ok ? "#2ed573" : "var(--muted)", display: "flex", alignItems: "center", gap: 5 }}>
-                          <span style={{ fontSize: 9 }}>{ok ? "✓" : "○"}</span> {r.label}
-                        </p>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Confirm password */}
-            <div style={{ marginBottom: 22 }}>
-              <label style={labelStyle}>Confirm password <span style={{ color: "#ff4757" }}>*</span></label>
-              <input
-                type="password" required value={confirm}
-                onChange={(e) => { setConfirm(e.target.value); setConfirmErr(""); }}
-                onBlur={handleConfirmBlur}
-                placeholder="Repeat password" autoComplete="new-password"
-                style={{ ...inputStyle, borderColor: confirmErr ? "rgba(255,71,87,0.5)" : undefined }}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(0,229,255,0.4)")}
-              />
-              {confirmErr && <p style={fieldErrStyle}>⚠ {confirmErr}</p>}
-              {/* Live match indicator */}
-              {confirm.length > 0 && !confirmErr && password === confirm && (
-                <p style={{ fontSize: 11, color: "#2ed573", marginTop: 5 }}>✓ Passwords match</p>
-              )}
-            </div>
-
-            {/* Submit-level error */}
-            {submitErr && (
-              <div style={{ background: "rgba(255,71,87,0.08)", border: "1px solid rgba(255,71,87,0.25)", color: "var(--red)", borderRadius: 8, padding: "10px 14px", fontSize: 12, marginBottom: 16 }}>
-                ⚠ {submitErr}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              style={{ width: "100%", background: submitting ? "rgba(0,229,255,0.3)" : "var(--accent)", color: "#000", border: "none", borderRadius: 10, padding: "13px", fontFamily: "var(--font-syne)", fontWeight: 800, fontSize: 14, cursor: submitting ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s", marginTop: 4 }}
-            >
-              {submitting
-                ? (<><svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" /></svg>Creating account…</>)
-                : "Create Account →"
-              }
-            </button>
-          </form>
-
-          <p style={{ color: "var(--muted)", fontSize: 12, textAlign: "center", marginTop: 20 }}>
-            Already have an account?{" "}
-            <Link href="/login" style={{ color: "var(--accent)", fontWeight: 700 }}>Sign in →</Link>
-          </p>
-        </div>
+        <Suspense fallback={
+          <div className="bg-white border border-05 border-default rounded-[12px] p-8 text-center text-[13px] text-[#5a5a56]">
+            Loading registration form...
+          </div>
+        }>
+          <RegisterForm />
+        </Suspense>
       </div>
     </main>
   );
 }
-

@@ -1,27 +1,32 @@
 "use client";
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
 
-export default function LoginPage() {
+import { useState, useEffect, Suspense } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import Logo from "@/components/Logo";
+
+function LoginForm() {
   const { login, user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/dashboard";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) router.replace("/dashboard");
-  }, [user, loading, router]);
+    if (!loading && user) router.replace(redirect);
+  }, [user, loading, router, redirect]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(""); setSubmitting(true);
     try {
       await login(email, password);
-      router.push("/dashboard");
+      router.push(redirect);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -30,62 +35,93 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1, padding: "24px" }}>
-      <div style={{ width: "100%", maxWidth: 420 }}>
-        <Link href="/" style={{ display: "block", textAlign: "center", fontFamily: "var(--font-syne)", fontSize: 22, fontWeight: 900, color: "var(--accent)", marginBottom: 32 }}>
-          snip<span style={{ color: "var(--accent2)" }}>.</span>ly
+    <div className="bg-white border border-05 border-default rounded-[12px] p-8 flex flex-col gap-6">
+      <div className="text-center">
+        <h1 className="text-[20px] font-medium text-[#1a1a18] mb-1">Welcome back</h1>
+        <p className="text-[13px] text-[#5a5a56]">Sign in to manage your links &amp; analytics</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] text-[#5a5a56] uppercase tracking-wider font-medium">Email</label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="w-full h-[40px] px-3 border border-05 border-default rounded-[8px] text-[13px] text-[#1a1a18] outline-none focus:border-[#185FA5] focus:ring-3 focus:ring-[#185FA5]/15 transition-all bg-white"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] text-[#5a5a56] uppercase tracking-wider font-medium">Password</label>
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className="w-full h-[40px] px-3 border border-05 border-default rounded-[8px] text-[13px] text-[#1a1a18] outline-none focus:border-[#185FA5] focus:ring-3 focus:ring-[#185FA5]/15 transition-all bg-white"
+          />
+        </div>
+
+        {/* Forgot password link */}
+        <div className="text-right">
+          <Link href="/forgot-password" className="text-[12px] text-[#185FA5] hover:underline font-medium">
+            Forgot password?
+          </Link>
+        </div>
+
+        {error && (
+          <div className="bg-[#D85A30]/10 border border-05 border-[#D85A30]/30 text-[#D85A30] rounded-[8px] p-3 text-[12px]">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full h-[40px] bg-[#185FA5] text-[#E6F1FB] hover:bg-[#0C447C] rounded-[8px] text-[13px] font-medium transition-colors flex items-center justify-center gap-2 disabled:bg-[#185FA5]/40"
+        >
+          {submitting ? (
+            <>
+              <svg className="animate-spin h-4 w-4 text-[#E6F1FB]" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Signing in
+            </>
+          ) : (
+            "Sign In"
+          )}
+        </button>
+      </form>
+
+      <p className="text-[12px] text-[#5a5a56] text-center">
+        No account?{" "}
+        <Link href={redirect !== "/dashboard" ? `/register?redirect=${encodeURIComponent(redirect)}` : "/register"} className="text-[#185FA5] hover:underline font-medium">Create one free</Link>
+      </p>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <main className="min-h-screen bg-[#f7f7f5] flex flex-col items-center justify-center p-6 text-[#1a1a18]">
+      <div className="w-full max-w-[400px]">
+        {/* Logo */}
+        <Link href="/" className="flex justify-center mb-6 hover:opacity-90 transition-opacity">
+          <Logo fontSize={18} size={24} />
         </Link>
 
-        <div className="glass" style={{ border: "1px solid var(--border)", borderRadius: 20, padding: "36px 32px" }}>
-          <h1 style={{ fontFamily: "var(--font-syne)", fontSize: 24, fontWeight: 800, marginBottom: 6, textAlign: "center" }}>Welcome back</h1>
-          <p style={{ color: "var(--muted)", fontSize: 13, textAlign: "center", marginBottom: 28 }}>Sign in to manage your links &amp; analytics</p>
-
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ display: "block", fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Email</label>
-              <input
-                type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                style={{ width: "100%", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 13, outline: "none", fontFamily: "var(--font-mono)", transition: "border-color 0.2s" }}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(0,229,255,0.4)")}
-                onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
-              />
-            </div>
-
-            <div style={{ marginBottom: 10 }}>
-              <label style={{ display: "block", fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Password</label>
-              <input
-                type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                style={{ width: "100%", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text)", fontSize: 13, outline: "none", fontFamily: "var(--font-mono)", transition: "border-color 0.2s" }}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(0,229,255,0.4)")}
-                onBlur={(e)  => (e.target.style.borderColor = "var(--border)")}
-              />
-            </div>
-
-            {/* Forgot password link — right-aligned under the password field */}
-            <div style={{ textAlign: "right", marginBottom: 18 }}>
-              <Link href="/forgot-password" style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, opacity: 0.85 }}>
-                Forgot password?
-              </Link>
-            </div>
-
-            {error && (
-              <div style={{ background: "rgba(255,71,87,0.08)", border: "1px solid rgba(255,71,87,0.25)", color: "var(--red)", borderRadius: 8, padding: "10px 14px", fontSize: 12, marginBottom: 16 }}>
-                ⚠ {error}
-              </div>
-            )}
-
-            <button type="submit" disabled={submitting} style={{ width: "100%", background: submitting ? "rgba(0,229,255,0.3)" : "var(--accent)", color: "#000", border: "none", borderRadius: 10, padding: "13px", fontFamily: "var(--font-syne)", fontWeight: 800, fontSize: 14, cursor: submitting ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s" }}>
-              {submitting ? (<><svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" /></svg>Signing in…</>) : "Sign In →"}
-            </button>
-          </form>
-
-          <p style={{ color: "var(--muted)", fontSize: 12, textAlign: "center", marginTop: 20 }}>
-            No account?{" "}
-            <Link href="/register" style={{ color: "var(--accent)", fontWeight: 700 }}>Create one free →</Link>
-          </p>
-        </div>
+        <Suspense fallback={
+          <div className="bg-white border border-05 border-default rounded-[12px] p-8 text-center text-[13px] text-[#5a5a56]">
+            Loading login form...
+          </div>
+        }>
+          <LoginForm />
+        </Suspense>
       </div>
     </main>
   );

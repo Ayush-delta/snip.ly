@@ -7,7 +7,7 @@ interface SparklineProps {
 
 export default function Sparkline({
   data,
-  color = "#00e5ff",
+  color = "#185FA5",
   width = 80,
   height = 28,
 }: SparklineProps) {
@@ -27,17 +27,9 @@ export default function Sparkline({
   });
 
   const pathD = `M${points.join(" L")}`;
-  const fillPath = `${pathD} L${width},${height} L0,${height} Z`;
 
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: "visible" }}>
-      <defs>
-        <linearGradient id={`sg-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.3} />
-          <stop offset="100%" stopColor={color} stopOpacity={0} />
-        </linearGradient>
-      </defs>
-      <path d={fillPath} fill={`url(#sg-${color.replace("#", "")})`} />
       <path d={pathD} stroke={color} strokeWidth={1.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );

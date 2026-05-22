@@ -5,9 +5,10 @@ import { QRCodeSVG } from "qrcode.react";
 interface Props {
   value: string;
   size?: number;
+  id?: string;
 }
 
-export default function QRCode({ value, size = 160 }: Props) {
+export default function QRCode({ value, size = 160, id }: Props) {
   return (
     <div
       style={{
@@ -18,6 +19,7 @@ export default function QRCode({ value, size = 160 }: Props) {
       }}
     >
       <QRCodeSVG
+        id={id}
         value={value}
         size={size}
         bgColor="#ffffff"
